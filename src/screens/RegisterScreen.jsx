@@ -1,6 +1,8 @@
 import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -8,123 +10,96 @@ import {
   View,
 } from "react-native";
 
-// Importa a conexão com a API
-import api from "../services/api";
-
 export default function RegisterScreen({ navigation }) {
-
-  // Estados para armazenar os dados digitados
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-
-  // Função responsável por realizar o cadastro
   async function handleRegister() {
-
-    console.log("Botão de cadastro clicado");
-    console.log("Nome:", nome);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Confirm Password:", confirmPassword);
-
-    // Verifica se todos os campos foram preenchidos
     if (!nome || !email || !password || !confirmPassword) {
-      console.log("ERRO: Existem campos vazios.");
+      Alert.alert("Atenção", "Preencha todos os campos.");
       return;
     }
 
-    console.log("Todos os campos foram preenchidos");
-
-    // Verifica se as senhas são iguais
     if (password !== confirmPassword) {
-      console.log("ERRO: As senhas não coincidem.");
+      Alert.alert("Atenção", "As senhas não coincidem.");
       return;
     }
-
-    console.log("Senhas conferidas");
 
     try {
-      // Faz a requisição POST para a API
-      const response = await api.post(
-        "/users/register",
-        {
-          email: email,
-          password: password,
-        }
+      const usuario = {
+        nome: nome.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      };
+
+      await AsyncStorage.setItem(
+        "@jardim_secreto_usuario",
+        JSON.stringify(usuario)
       );
-      console.log("Cadastro realizado com sucesso!");
-      navigation.navigate("Login");
 
+      Alert.alert(
+        "Cadastro realizado!",
+        "Sua conta foi criada com sucesso.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("Login"),
+          },
+        ]
+      );
     } catch (error) {
+      console.log("Erro ao salvar usuário:", error);
 
-      console.log("Erro no cadastro:", error);
-
-      console.log(
-        "Mensagem da API:",
-        error.response?.data?.message ||
-        "Não foi possível realizar o cadastro."
+      Alert.alert(
+        "Erro",
+        "Não foi possível criar sua conta."
       );
     }
   }
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Crie sua conta</Text>
 
-      <Text style={styles.title}>
-        Crie sua conta
-      </Text>
-
-      <Text style={styles.label}>
-        Nome
-      </Text>
+      <Text style={styles.label}>Nome</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Digite seu nome"
-
         value={nome}
         onChangeText={setNome}
       />
 
-      <Text style={styles.label}>
-        E-mail
-      </Text>
+      <Text style={styles.label}>E-mail</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Digite seu e-mail"
-
         value={email}
         onChangeText={setEmail}
-
         keyboardType="email-address"
         autoCapitalize="none"
+        autoCorrect={false}
       />
 
-      <Text style={styles.label}>
-        Senha
-      </Text>
+      <Text style={styles.label}>Senha</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Digite sua senha"
         secureTextEntry
-
         value={password}
         onChangeText={setPassword}
       />
 
-      <Text style={styles.label}>
-        Confirme sua senha
-      </Text>
+      <Text style={styles.label}>Confirme sua senha</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Digite sua senha novamente"
         secureTextEntry
-
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
@@ -133,17 +108,13 @@ export default function RegisterScreen({ navigation }) {
         style={styles.button}
         onPress={handleRegister}
       >
-
         <Text style={styles.buttonText}>
           Criar conta
         </Text>
-
       </TouchableOpacity>
 
       <Text style={styles.loginText}>
-
         Já possui uma conta?{" "}
-
         <Text
           style={styles.loginLink}
           onPress={() => navigation.navigate("Login")}
@@ -156,7 +127,6 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     justifyContent: "center",
@@ -182,7 +152,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     marginTop: 8,
-    outlineStyle: "none",
   },
 
   button: {
@@ -209,5 +178,4 @@ const styles = StyleSheet.create({
     color: "#4A5D23",
     fontWeight: "bold",
   },
-
 });
